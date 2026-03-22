@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Planner</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #14171f;
+  --border: #1e2229;
+  --border2: #252b35;
+  --text: #e8eaf0;
+  --muted: #5a6070;
+  --muted2: #3a4050;
+  --green: #40e080;
+  --red: #ff5555;
+  --blue: #47c8ff;
+  --yellow: #e8ff47;
+  --orange: #ff9f47;
+  --purple: #c47aff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.container { max-width: 900px; margin: 0 auto; }
+
+/* Back link */
+.back-link {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; margin-bottom: 1.5rem;
+  transition: color .2s;
+}
+.back-link:hover { color: var(--green); }
+
+/* Header */
+.eyebrow { font-size: .65rem; letter-spacing: .25em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,6vw,3.5rem); font-weight: 800; line-height: 1; letter-spacing: -.02em; margin-bottom: 2rem; }
+h1 span { color: var(--green); }
+
+/* Tabs */
+.tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.tab {
+  font-family: 'DM Mono', monospace; font-size: .68rem; letter-spacing: .1em;
+  text-transform: uppercase; padding: .55rem 1.2rem; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  cursor: pointer; transition: all .2s;
+}
+.tab:hover { border-color: var(--green); color: var(--text); }
+.tab.active { background: var(--green); border-color: var(--green); color: #0a0c10; font-weight: 500; }
+
+/* Panels */
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn .25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* Cards */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.4rem; margin-bottom: 1rem;
+}
+.card-title {
+  font-size: .62rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1.2rem;
+}
+
+/* Grid */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media(max-width:600px) { .grid2,.grid3 { grid-template-columns: 1fr; } }
+
+/* Stat cards */
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.2rem; position: relative; overflow: hidden;
+}
+.stat-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; }
+.stat-card.income::before { background: var(--green); }
+.stat-card.expense::before { background: var(--red); }
+.stat-card.balance::before { background: var(--blue); }
+.stat-card.savings::before { background: var(--yellow); }
+.stat-label { font-size: .58rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em; }
+.stat-val.green { color: var(--green); }
+.stat-val.red { color: var(--red); }
+.stat-val.blue { color: var(--blue); }
+.stat-val.yellow { color: var(--yellow); }
+.stat-sub { font-size: .6rem; color: var(--muted); margin-top: .3rem; }
+
+/* Input row */
+.input-row {
+  display: grid; grid-template-columns: 1fr 1fr auto;
+  gap: .6rem; align-items: end; margin-bottom: .8rem;
+}
+.input-row-4 {
+  display: grid; grid-template-columns: 2fr 1fr 1fr auto;
+  gap: .6rem; align-items: end; margin-bottom: .8rem;
+}
+@media(max-width:600px) { .input-row,.input-row-4 { grid-template-columns: 1fr; } }
+
+label { font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: .35rem; }
+
+input[type=text], input[type=number], select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: .6rem .8rem; color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: .82rem; outline: none;
+  transition: border-color .2s; -moz-appearance: textfield;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--green); }
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+select option { background: #111318; }
+
+/* Buttons */
+.btn {
+  font-family: 'DM Mono', monospace; font-size: .7rem; letter-spacing: .08em;
+  text-transform: uppercase; padding: .6rem 1rem; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--green); color: var(--green); }
+.btn-add { border-color: var(--green); color: var(--green); }
+.btn-add:hover { background: var(--green); color: #0a0c10; }
+.btn-danger { border-color: var(--red); color: var(--red); font-size: .6rem; padding: .3rem .6rem; }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-primary { background: var(--green); border-color: var(--green); color: #0a0c10; font-weight: 500; }
+.btn-primary:hover { opacity: .85; }
+
+/* List items */
+.list-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .65rem .5rem; border-bottom: 1px solid var(--border);
+  font-size: .78rem; gap: .5rem;
+}
+.list-item:last-child { border-bottom: none; }
+.list-item-name { flex: 1; }
+.list-item-cat {
+  font-size: .6rem; letter-spacing: .08em; padding: .15rem .45rem;
+  border-radius: 4px; background: var(--surface2); color: var(--muted); white-space: nowrap;
+}
+.list-item-amt { font-weight: 500; white-space: nowrap; min-width: 80px; text-align: right; }
+.list-item-amt.income { color: var(--green); }
+.list-item-amt.expense { color: var(--red); }
+.empty-state { color: var(--muted); font-size: .72rem; text-align: center; padding: 1.5rem; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: .8rem; }
+.progress-header { display: flex; justify-content: space-between; font-size: .68rem; color: var(--muted); margin-bottom: .35rem; }
+.progress-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+
+/* Category dot */
+.cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+/* Chart container */
+.chart-container { position: relative; height: 240px; margin-top: .8rem; }
+
+/* Debt card */
+.debt-result-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .8rem; margin-top: 1rem; }
+@media(max-width:500px) { .debt-result-grid { grid-template-columns: 1fr; } }
+.debt-result-item { text-align: center; }
+.debt-result-label { font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .3rem; }
+.debt-result-val { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; }
+
+/* Amortisation table */
+.amort-table-wrap { max-height: 280px; overflow-y: auto; margin-top: 1rem; }
+.amort-table-wrap::-webkit-scrollbar { width: 4px; }
+.amort-table-wrap::-webkit-scrollbar-track { background: var(--border); border-radius: 2px; }
+.amort-table-wrap::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: .72rem; }
+th { font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: .4rem .5rem .6rem; border-bottom: 1px solid var(--border); text-align: left; position: sticky; top: 0; background: var(--surface); font-weight: 400; }
+td { padding: .45rem .5rem; border-bottom: 1px solid #15171c; }
+tr:hover td { background: #13161c; }
+tr:last-child td { border-bottom: none; }
+td.red { color: var(--red); }
+td.green { color: var(--green); }
+
+/* Month selector */
+.month-bar { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.2rem; align-items: center; }
+.month-btn { font-family: 'DM Mono', monospace; font-size: .62rem; padding: .3rem .65rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all .2s; }
+.month-btn.active { border-color: var(--yellow); color: var(--yellow); }
+.month-btn:hover { border-color: var(--text); color: var(--text); }
+.month-label { font-size: .62rem; color: var(--muted); letter-spacing: .1em; }
+
+footer { text-align: center; font-size: .58rem; color: var(--muted); letter-spacing: .1em; margin-top: 2rem; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="back-link" href="index.html">← All calculators</a>
+  <div class="eyebrow">Personal Finance</div>
+  <h1>Financial <span>Planner</span></h1>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('budget')">Budget</button>
+    <button class="tab" onclick="switchTab('categories')">Categories</button>
+    <button class="tab" onclick="switchTab('debt')">Debt</button>
+  </div>
+
+  <!-- ═══════════════ BUDGET PANEL ═══════════════ -->
+  <div class="panel active" id="panel-budget">
+
+    <div class="month-bar">
+      <span class="month-label">Month:</span>
+      <div id="month-btns"></div>
+      <button class="btn" style="margin-left:.4rem" onclick="addMonth()">+ New month</button>
+    </div>
+
+    <div class="grid2" id="budget-stats"></div>
+
+    <div class="grid2">
+      <!-- Income -->
+      <div class="card">
+        <div class="card-title">Income</div>
+        <div class="input-row">
+          <div><label>Description</label><input type="text" id="inc-name" placeholder="Salary"></div>
+          <div><label>Amount (€)</label><input type="number" id="inc-amt" placeholder="0"></div>
+          <button class="btn btn-add" onclick="addIncome()" style="align-self:flex-end">Add</button>
+        </div>
+        <div id="income-list"><div class="empty-state">No income added</div></div>
+      </div>
+
+      <!-- Expenses -->
+      <div class="card">
+        <div class="card-title">Expenses</div>
+        <div class="input-row-4">
+          <div><label>Description</label><input type="text" id="exp-name" placeholder="Rent"></div>
+          <div><label>Category</label>
+            <select id="exp-cat">
+              <option>Housing</option><option>Food</option><option>Transport</option>
+              <option>Health</option><option>Entertainment</option><option>Savings</option><option>Other</option>
+            </select>
+          </div>
+          <div><label>Amount (€)</label><input type="number" id="exp-amt" placeholder="0"></div>
+          <button class="btn btn-add" onclick="addExpense()" style="align-self:flex-end">Add</button>
+        </div>
+        <div id="expense-list"><div class="empty-state">No expenses added</div></div>
+      </div>
+    </div>
+
+    <!-- Budget chart -->
+    <div class="card">
+      <div class="card-title">Monthly overview — last 6 months</div>
+      <div class="chart-container"><canvas id="budgetChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CATEGORIES PANEL ═══════════════ -->
+  <div class="panel" id="panel-categories">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Spending by category</div>
+        <div id="cat-bars"><div class="empty-state">No expenses recorded</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Distribution</div>
+        <div class="chart-container"><canvas id="catChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">All expenses — current month</div>
+      <div id="cat-list"><div class="empty-state">No expenses recorded</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ DEBT PANEL ═══════════════ -->
+  <div class="panel" id="panel-debt">
+    <div class="card">
+      <div class="card-title">Loan / Credit calculator</div>
+      <div class="grid3">
+        <div><label>Loan amount (€)</label><input type="number" id="d-principal" value="10000" min="1"></div>
+        <div><label>Annual interest rate (%)</label><input type="number" id="d-rate" value="5.5" step="0.1" min="0.1"></div>
+        <div><label>Term (months)</label><input type="number" id="d-months" value="60" min="1" max="600"></div>
+      </div>
+      <div style="display:flex;gap:.6rem;margin-top:.4rem">
+        <button class="btn btn-primary" onclick="calcDebt()">Calculate</button>
+        <button class="btn" onclick="clearDebt()">Clear</button>
+      </div>
+
+      <div class="debt-result-grid" id="debt-results" style="display:none">
+        <div class="debt-result-item">
+          <div class="debt-result-label">Monthly payment</div>
+          <div class="debt-result-val" id="d-monthly" style="color:var(--yellow)">—</div>
+        </div>
+        <div class="debt-result-item">
+          <div class="debt-result-label">Total repayment</div>
+          <div class="debt-result-val" id="d-total" style="color:var(--red)">—</div>
+        </div>
+        <div class="debt-result-item">
+          <div class="debt-result-label">Total interest</div>
+          <div class="debt-result-val" id="d-interest" style="color:var(--red)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2" id="debt-charts-wrap" style="display:none">
+      <div class="card">
+        <div class="card-title">Principal vs interest over time</div>
+        <div class="chart-container"><canvas id="debtChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Balance payoff timeline</div>
+        <div class="chart-container"><canvas id="balanceChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" id="amort-wrap" style="display:none">
+      <div class="card-title">Amortisation schedule</div>
+      <div class="amort-table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+          <tbody id="amort-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>Data stored locally in your browser · Not financial advice</footer>
+</div>
+
+<script>
+// ═══ UTILS ═══
+const fmt = n => Math.abs(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+const fmtDec = (n,d=2) => n.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+const $ = id => document.getElementById(id);
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CAT_COLORS = {
+  Housing:'#47c8ff', Food:'#40e080', Transport:'#ff9f47',
+  Health:'#c47aff', Entertainment:'#ff5555', Savings:'#e8ff47', Other:'#5a6070'
+};
+
+// ═══ STATE ═══
+let state = JSON.parse(localStorage.getItem('fp-state') || 'null') || {
+  months: {},
+  currentMonth: null
+};
+
+function save() { localStorage.setItem('fp-state', JSON.stringify(state)); }
+
+function getMonthKey() {
+  if (!state.currentMonth) {
+    const now = new Date();
+    state.currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+  return state.currentMonth;
+}
+
+function getMonth(key) {
+  if (!state.months[key]) state.months[key] = { income: [], expenses: [] };
+  return state.months[key];
+}
+
+// ═══ TABS ═══
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['budget','categories','debt'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  $('panel-' + name).classList.add('active');
+  if (name === 'budget') renderBudget();
+  if (name === 'categories') renderCategories();
+}
+
+// ═══ MONTHS ═══
+function addMonth() {
+  const key = prompt('Enter month (YYYY-MM):', new Date().toISOString().slice(0,7));
+  if (key && /^\d{4}-\d{2}$/.test(key)) {
+    getMonth(key);
+    state.currentMonth = key;
+    save(); renderBudget();
+  }
+}
+
+function renderMonthBtns() {
+  const keys = Object.keys(state.months).sort();
+  // Ensure current month exists
+  getMonth(getMonthKey());
+  if (!state.months[getMonthKey()]) {
+    keys.push(getMonthKey());
+  }
+  const allKeys = [...new Set([...keys, getMonthKey()])].sort();
+  const wrap = $('month-btns');
+  wrap.innerHTML = allKeys.map(k => {
+    const [y,m] = k.split('-');
+    const label = `${MONTHS[parseInt(m)-1]} ${y}`;
+    return `<button class="month-btn ${k===state.currentMonth?'active':''}" onclick="setMonth('${k}')">${label}</button>`;
+  }).join('');
+}
+
+function setMonth(key) {
+  state.currentMonth = key;
+  save(); renderBudget();
+}
+
+// ═══ BUDGET ═══
+function addIncome() {
+  const name = $('inc-name').value.trim();
+  const amt = parseFloat($('inc-amt').value);
+  if (!name || !amt || amt <= 0) return;
+  getMonth(getMonthKey()).income.push({ id: Date.now(), name, amt });
+  $('inc-name').value = ''; $('inc-amt').value = '';
+  save(); renderBudget();
+}
+
+function addExpense() {
+  const name = $('exp-name').value.trim();
+  const amt = parseFloat($('exp-amt').value);
+  const cat = $('exp-cat').value;
+  if (!name || !amt || amt <= 0) return;
+  getMonth(getMonthKey()).expenses.push({ id: Date.now(), name, amt, cat });
+  $('exp-name').value = ''; $('exp-amt').value = '';
+  save(); renderBudget(); renderCategories();
+}
+
+function removeIncome(id) {
+  getMonth(getMonthKey()).income = getMonth(getMonthKey()).income.filter(i => i.id !== id);
+  save(); renderBudget();
+}
+
+function removeExpense(id) {
+  getMonth(getMonthKey()).expenses = getMonth(getMonthKey()).expenses.filter(e => e.id !== id);
+  save(); renderBudget(); renderCategories();
+}
+
+function renderBudget() {
+  renderMonthBtns();
+  const m = getMonth(getMonthKey());
+  const totalInc = m.income.reduce((s,i) => s+i.amt, 0);
+  const totalExp = m.expenses.reduce((s,e) => s+e.amt, 0);
+  const balance = totalInc - totalExp;
+  const savingsAmt = m.expenses.filter(e=>e.cat==='Savings').reduce((s,e)=>s+e.amt,0);
+  const savingsRate = totalInc > 0 ? (savingsAmt/totalInc*100) : 0;
+
+  $('budget-stats').innerHTML = `
+    <div class="stat-card income"><div class="stat-label">Total income</div><div class="stat-val green">€${fmt(totalInc)}</div></div>
+    <div class="stat-card expense"><div class="stat-label">Total expenses</div><div class="stat-val red">€${fmt(totalExp)}</div></div>
+    <div class="stat-card balance"><div class="stat-label">Balance</div><div class="stat-val ${balance>=0?'green':'red'}">${balance<0?'-':''}€${fmt(balance)}</div><div class="stat-sub">${balance>=0?'Surplus':'Deficit'} this month</div></div>
+    <div class="stat-card savings"><div class="stat-label">Savings rate</div><div class="stat-val yellow">${fmtDec(savingsRate,1)}%</div><div class="stat-sub">€${fmt(savingsAmt)} saved</div></div>
+  `;
+
+  // Income list
+  $('income-list').innerHTML = m.income.length ? m.income.map(i => `
+    <div class="list-item">
+      <span class="list-item-name">${i.name}</span>
+      <span class="list-item-amt income">+€${fmt(i.amt)}</span>
+      <button class="btn btn-danger" onclick="removeIncome(${i.id})">✕</button>
+    </div>`).join('') : '<div class="empty-state">No income added</div>';
+
+  // Expense list
+  $('expense-list').innerHTML = m.expenses.length ? m.expenses.map(e => `
+    <div class="list-item">
+      <span class="list-item-name">${e.name}</span>
+      <span class="list-item-cat" style="color:${CAT_COLORS[e.cat]||'#5a6070'}">${e.cat}</span>
+      <span class="list-item-amt expense">-€${fmt(e.amt)}</span>
+      <button class="btn btn-danger" onclick="removeExpense(${e.id})">✕</button>
+    </div>`).join('') : '<div class="empty-state">No expenses added</div>';
+
+  renderBudgetChart();
+}
+
+let budgetChart;
+function renderBudgetChart() {
+  const keys = Object.keys(state.months).sort().slice(-6);
+  const labels = keys.map(k => { const [y,m]=k.split('-'); return `${MONTHS[parseInt(m)-1]} '${y.slice(2)}`; });
+  const incomes = keys.map(k => state.months[k].income.reduce((s,i)=>s+i.amt,0));
+  const expenses = keys.map(k => state.months[k].expenses.reduce((s,e)=>s+e.amt,0));
+
+  if (budgetChart) budgetChart.destroy();
+  const ctx = $('budgetChart').getContext('2d');
+  budgetChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Income', data: incomes, backgroundColor: 'rgba(64,224,128,0.25)', borderColor: '#40e080', borderWidth: 2, borderRadius: 4 },
+        { label: 'Expenses', data: expenses, backgroundColor: 'rgba(255,85,85,0.2)', borderColor: '#ff5555', borderWidth: 2, borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#5a6070', font: { family: 'DM Mono', size: 11 }, boxWidth: 12 } },
+        tooltip: { backgroundColor: '#111318', borderColor: '#1e2229', borderWidth: 1, titleColor: '#5a6070', bodyColor: '#e8eaf0', titleFont: { family: 'DM Mono' }, bodyFont: { family: 'DM Mono' }, callbacks: { label: c => ` ${c.dataset.label}: €${fmt(c.raw)}` } }
+      },
+      scales: {
+        x: { grid: { color: '#1e2229' }, ticks: { color: '#5a6070', font: { family: 'DM Mono', size: 10 } } },
+        y: { grid: { color: '#1e2229' }, ticks: { color: '#5a6070', font: { family: 'DM Mono', size: 10 }, callback: v => '€'+fmt(v) } }
+      }
+    }
+  });
+}
+
+// ═══ CATEGORIES ═══
+let catChart;
+function renderCategories() {
+  const m = getMonth(getMonthKey());
+  const totalExp = m.expenses.reduce((s,e) => s+e.amt, 0);
+  const byCat = {};
+  m.expenses.forEach(e => { byCat[e.cat] = (byCat[e.cat]||0) + e.amt; });
+  const cats = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+
+  // Progress bars
+  $('cat-bars').innerHTML = cats.length ? cats.map(([cat,amt]) => `
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <span><span class="cat-dot" style="background:${CAT_COLORS[cat]||'#5a6070'}"></span> ${cat}</span>
+        <span>€${fmt(amt)} <span style="color:var(--muted)">(${fmtDec(amt/totalExp*100,1)}%)</span></span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width:${amt/totalExp*100}%;background:${CAT_COLORS[cat]||'#5a6070'}"></div>
+      </div>
+    </div>`).join('') : '<div class="empty-state">No expenses recorded</div>';
+
+  // Expense list
+  $('cat-list').innerHTML = m.expenses.length ? m.expenses.map(e => `
+    <div class="list-item">
+      <span class="list-item-name">${e.name}</span>
+      <span class="list-item-cat" style="color:${CAT_COLORS[e.cat]||'#5a6070'}">${e.cat}</span>
+      <span class="list-item-amt expense">-€${fmt(e.amt)}</span>
+    </div>`).join('') : '<div class="empty-state">No expenses recorded</div>';
+
+  // Donut chart
+  if (catChart) catChart.destroy();
+  const ctx = $('catChart').getContext('2d');
+  if (cats.length) {
+    catChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: cats.map(c=>c[0]),
+        datasets: [{ data: cats.map(c=>c[1]), backgroundColor: cats.map(c=>CAT_COLORS[c[0]]||'#5a6070'), borderColor: '#0a0c10', borderWidth: 3, hoverBorderWidth: 3 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#5a6070', font: { family: 'DM Mono', size: 10 }, boxWidth: 10, padding: 10 } },
+          tooltip: { backgroundColor: '#111318', borderColor: '#1e2229', borderWidth: 1, titleColor: '#5a6070', bodyColor: '#e8eaf0', titleFont: { family: 'DM Mono' }, bodyFont: { family: 'DM Mono' }, callbacks: { label: c => ` €${fmt(c.raw)} (${fmtDec(c.raw/totalExp*100,1)}%)` } }
+        }
+      }
+    });
+  }
+}
+
+// ═══ DEBT ═══
+let debtChart, balChart;
+function calcDebt() {
+  const P = parseFloat($('d-principal').value);
+  const r = parseFloat($('d-rate').value) / 100 / 12;
+  const n = parseInt($('d-months').value);
+  if (!P || !r || !n) return;
+
+  const monthly = r === 0 ? P/n : P * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
+  const total = monthly * n;
+  const interest = total - P;
+
+  $('d-monthly').textContent = '€' + fmtDec(monthly);
+  $('d-total').textContent = '€' + fmtDec(total);
+  $('d-interest').textContent = '€' + fmtDec(interest);
+  $('debt-results').style.display = 'grid';
+  $('debt-charts-wrap').style.display = 'grid';
+  $('amort-wrap').style.display = 'block';
+
+  // Build schedule
+  let balance = P;
+  const schedule = [];
+  const principalArr = [], interestArr = [], balanceArr = [], labels = [];
+
+  for (let i = 1; i <= n; i++) {
+    const intPart = balance * r;
+    const prinPart = monthly - intPart;
+    balance -= prinPart;
+    schedule.push({ i, payment: monthly, principal: prinPart, interest: intPart, balance: Math.max(0, balance) });
+    if (i % Math.max(1, Math.floor(n/24)) === 0 || i === 1 || i === n) {
+      labels.push(`M${i}`);
+      principalArr.push(prinPart);
+      interestArr.push(intPart);
+      balanceArr.push(Math.max(0, balance));
+    }
+  }
+
+  // Amort table
+  $('amort-body').innerHTML = schedule.map(r => `
+    <tr>
+      <td>${r.i}</td>
+      <td>€${fmtDec(r.payment)}</td>
+      <td class="green">€${fmtDec(r.principal)}</td>
+      <td class="red">€${fmtDec(r.interest)}</td>
+      <td>€${fmtDec(r.balance)}</td>
+    </tr>`).join('');
+
+  // Debt chart
+  if (debtChart) debtChart.destroy();
+  debtChart = new Chart($('debtChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Principal', data: principalArr, backgroundColor: 'rgba(64,224,128,0.3)', borderColor: '#40e080', borderWidth: 1.5, borderRadius: 2 },
+        { label: 'Interest',  data: interestArr,  backgroundColor: 'rgba(255,85,85,0.3)',   borderColor: '#ff5555', borderWidth: 1.5, borderRadius: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#5a6070', font: { family: 'DM Mono', size: 10 }, boxWidth: 10 } }, tooltip: { backgroundColor: '#111318', borderColor: '#1e2229', borderWidth: 1, titleColor: '#5a6070', bodyColor: '#e8eaf0', callbacks: { label: c => ` ${c.dataset.label}: €${fmtDec(c.raw)}` } } },
+      scales: { x: { stacked: true, grid: { color: '#1e2229' }, ticks: { color: '#5a6070', font: { family: 'DM Mono', size: 9 } } }, y: { stacked: true, grid: { color: '#1e2229' }, ticks: { color: '#5a6070', font: { family: 'DM Mono', size: 9 }, callback: v => '€'+fmt(v) } } }
+    }
+  });
+
+  // Balance chart
+  if (balChart) balChart.destroy();
+  balChart = new Chart($('balanceChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label: 'Remaining balance', data: balanceArr, borderColor: '#47c8ff', backgroundColor: 'rgba(71,200,255,0.07)', borderWidth: 2.5, pointRadius: 0, fill: true, tension: 0.3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#5a6070', font: { family: 'DM Mono', size: 10 }, boxWidth: 10 } }, tooltip: { backgroundColor: '#111318', borderColor: '#1e2229', borderWidth: 1, titleColor: '#5a6070', bodyColor: '#e8eaf0', callbacks: { label: c => ` Balance: €${fmt(c.raw)}` } } },
+      scales: { x: { grid: { color: '#1e2229' }, ticks: { color: '#5a6070', font: { family: 'DM Mono', size: 9 } } }, y: { grid: { color: '#1e2229' }, ticks: { color: '#5a6070', font: { family: 'DM Mono', size: 9 }, callback: v => '€'+fmt(v) } } }
+    }
+  });
+}
+
+function clearDebt() {
+  $('debt-results').style.display = 'none';
+  $('debt-charts-wrap').style.display = 'none';
+  $('amort-wrap').style.display = 'none';
+  $('d-principal').value = 10000;
+  $('d-rate').value = 5.5;
+  $('d-months').value = 60;
+  if (debtChart) { debtChart.destroy(); debtChart = null; }
+  if (balChart)  { balChart.destroy();  balChart  = null; }
+}
+
+// Enter key support
+['inc-name','inc-amt'].forEach(id => $(id).addEventListener('keydown', e => e.key==='Enter' && addIncome()));
+['exp-name','exp-amt','exp-cat'].forEach(id => $(id).addEventListener('keydown', e => e.key==='Enter' && addExpense()));
+
+// ═══ INIT ═══
+getMonth(getMonthKey());
+save();
+renderBudget();
+</script>
+</body>
+</html>
