@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compound Interest Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2ec;
+    --surface: #ffffff;
+    --border: #e0dbd0;
+    --border2: #ccc8bc;
+    --text: #1a1814;
+    --muted: #8a8478;
+    --accent: #c8500a;
+    --accent2: #2a6e3f;
+    --accent3: #1e4d8c;
+    --soft: #ede9e0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    padding: 2.5rem 1rem;
+  }
+
+  .container { max-width: 940px; margin: 0 auto; }
+
+  /* Header */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 1rem;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  header { margin-bottom: 2.5rem; position: relative; }
+
+  .eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .header-rule {
+    width: 100%;
+    height: 1px;
+    background: var(--border2);
+    margin-top: 1.5rem;
+  }
+
+  /* Big result display */
+  .hero-result {
+    background: var(--text);
+    color: var(--bg);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .hero-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 0.4rem;
+  }
+
+  .hero-value {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 7vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-value.orange { color: #ff8040; }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat { text-align: right; }
+  .hero-stat .hero-label { text-align: right; }
+  .hero-stat-val {
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-stat-val.green { color: #5ccb82; }
+  .hero-stat-val.blue  { color: #6ab4ff; }
+
+  /* Inputs grid */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 640px) { .grid-3 { grid-template-columns: 1fr; } }
+  @media (min-width: 641px) and (max-width: 800px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem;
+  }
+
+  .card-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.7rem;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .slider-value-input {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    outline: none;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    line-height: 1;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+
+  .slider-value-input::-webkit-outer-spin-button,
+  .slider-value-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .slider-value-input:focus { border-bottom-color: var(--accent); }
+
+  .slider-unit {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.4); }
+
+  /* Compound frequency toggle */
+  .freq-group {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+  }
+
+  .freq-btn {
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    padding: 0.35rem 0.2rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .freq-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .freq-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* Breakdown row */
+  .breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 500px) { .breakdown { grid-template-columns: 1fr; } }
+
+  .breakdown-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    border-top: 3px solid transparent;
+  }
+
+  .breakdown-card.principal { border-top-color: var(--accent3); }
+  .breakdown-card.contributions { border-top-color: var(--accent2); }
+  .breakdown-card.interest { border-top-color: var(--accent); }
+
+  .breakdown-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .breakdown-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.2rem;
+  }
+
+  .breakdown-card.principal .breakdown-val  { color: var(--accent3); }
+  .breakdown-card.contributions .breakdown-val { color: var(--accent2); }
+  .breakdown-card.interest .breakdown-val   { color: var(--accent); }
+
+  .breakdown-pct {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  /* Chart */
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .chart-title {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem;
+    overflow-x: auto;
+  }
+
+  .table-title {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.76rem;
+  }
+
+  th {
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  td {
+    padding: 0.5rem 0.5rem;
+    border-bottom: 1px solid #f0ece3;
+    color: var(--text);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #faf8f4; }
+
+  td.pos { color: var(--accent2); }
+  td.orange { color: var(--accent); }
+
+  .milestone-row td { font-weight: 500; }
+  .milestone-row td:first-child { position: relative; }
+  .milestone-row td:first-child::after {
+    content: attr(data-milestone);
+    font-size: 0.58rem;
+    color: var(--accent);
+    margin-left: 0.4rem;
+    opacity: 0.8;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 2rem;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <a class="back-link" href="index.html">← All calculators</a>
+    <div class="eyebrow">The eighth wonder of the world</div>
+    <h1>Compound<br><em>Interest</em></h1>
+    <div class="header-rule"></div>
+  </header>
+
+  <!-- Hero result -->
+  <div class="hero-result">
+    <div>
+      <div class="hero-label">Final portfolio value</div>
+      <div class="hero-value orange" id="h-final">—</div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-label">Total interest earned</div>
+        <div class="hero-stat-val green" id="h-interest">—</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-label">Return on investment</div>
+        <div class="hero-stat-val blue" id="h-roi">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-label">Initial Principal</div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-principal" min="0" max="10000000" step="1000" value="50000">
+        <span class="slider-unit">€</span>
+      </div>
+      <input type="range" id="s-principal" min="0" max="500000" step="1000" value="50000">
+    </div>
+    <div class="card">
+      <div class="card-label">Monthly Contribution</div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-contrib" min="0" max="50000" step="50" value="800">
+        <span class="slider-unit">€/mo</span>
+      </div>
+      <input type="range" id="s-contrib" min="0" max="5000" step="50" value="800">
+    </div>
+    <div class="card">
+      <div class="card-label">Annual Interest Rate</div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-rate" min="0.1" max="50" step="0.1" value="7.5">
+        <span class="slider-unit">%</span>
+      </div>
+      <input type="range" id="s-rate" min="0.5" max="20" step="0.5" value="7.5">
+    </div>
+    <div class="card">
+      <div class="card-label">Time Period</div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-years" min="1" max="100" step="1" value="20">
+        <span class="slider-unit">yrs</span>
+      </div>
+      <input type="range" id="s-years" min="1" max="50" step="1" value="20">
+    </div>
+    <div class="card">
+      <div class="card-label">Annual Inflation Rate</div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-inflation" min="0" max="30" step="0.1" value="2.5">
+        <span class="slider-unit">%</span>
+      </div>
+      <input type="range" id="s-inflation" min="0" max="10" step="0.5" value="2.5">
+    </div>
+    <div class="card">
+      <div class="card-label">Compounding Frequency</div>
+      <div class="freq-group">
+        <button class="freq-btn" data-n="1">Annual</button>
+        <button class="freq-btn" data-n="4">Quarter</button>
+        <button class="freq-btn active" data-n="12">Monthly</button>
+        <button class="freq-btn" data-n="365">Daily</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdown cards -->
+  <div class="breakdown">
+    <div class="breakdown-card principal">
+      <div class="breakdown-label">Initial Principal</div>
+      <div class="breakdown-val" id="b-principal">—</div>
+      <div class="breakdown-pct" id="b-principal-pct">—% of total</div>
+    </div>
+    <div class="breakdown-card contributions">
+      <div class="breakdown-label">Total Contributions</div>
+      <div class="breakdown-val" id="b-contrib">—</div>
+      <div class="breakdown-pct" id="b-contrib-pct">—% of total</div>
+    </div>
+    <div class="breakdown-card interest">
+      <div class="breakdown-label">Interest Earned</div>
+      <div class="breakdown-val" id="b-interest">—</div>
+      <div class="breakdown-pct" id="b-interest-pct">—% of total</div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-wrap">
+    <div class="chart-header">
+      <div class="chart-title">Portfolio growth over time</div>
+      <div class="chart-legend">
+        <div class="leg"><div class="leg-dot" style="background:#c8500a"></div>Total value</div>
+        <div class="leg"><div class="leg-dot" style="background:#1e4d8c"></div>Principal + contributions</div>
+        <div class="leg"><div class="leg-dot" style="background:#e8a87c;opacity:0.5"></div>Real value (inflation-adjusted)</div>
+      </div>
+    </div>
+    <canvas id="ciChart" height="260"></canvas>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-title">Year-by-year breakdown</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Calendar</th>
+          <th>Portfolio value</th>
+          <th>Real value (infl.)</th>
+          <th>Annual interest</th>
+          <th>Total invested</th>
+          <th>Interest (cumul.)</th>
+        </tr>
+      </thead>
+      <tbody id="ci-table"></tbody>
+    </table>
+  </div>
+
+  <footer>Projection is an approximation. Actual returns vary. Not financial advice.</footer>
+</div>
+
+<script>
+  function fmt(n) {
+    return Math.round(n).toLocaleString('en-US');
+  }
+
+  function fmtDec(n, d=1) {
+    return n.toFixed(d);
+  }
+
+  let compoundN = 12;
+
+  // Bidirectional slider ↔ number input sync
+  const sliderConfigs = [
+    { rangeId: 's-principal', numId: 'v-principal', min: 0,   max: 10000000 },
+    { rangeId: 's-contrib',   numId: 'v-contrib',   min: 0,   max: 50000    },
+    { rangeId: 's-rate',      numId: 'v-rate',      min: 0.1, max: 50       },
+    { rangeId: 's-years',     numId: 'v-years',     min: 1,   max: 100      },
+    { rangeId: 's-inflation', numId: 'v-inflation', min: 0,   max: 30       },
+  ];
+
+  sliderConfigs.forEach(({ rangeId, numId, min, max }) => {
+    const range = document.getElementById(rangeId);
+    const num   = document.getElementById(numId);
+
+    range.addEventListener('input', () => {
+      num.value = range.value;
+      calculate();
+    });
+
+    num.addEventListener('input', () => {
+      const v = parseFloat(num.value);
+      if (!isNaN(v)) {
+        range.value = Math.min(max, Math.max(min, v));
+        calculate();
+      }
+    });
+
+    num.addEventListener('blur', () => {
+      if (num.value === '' || isNaN(parseFloat(num.value))) {
+        num.value = min;
+        range.value = min;
+        calculate();
+      }
+    });
+  });
+
+  document.querySelectorAll('.freq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.freq-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      compoundN = parseInt(btn.dataset.n);
+      calculate();
+    });
+  });
+
+  // Chart init
+  let chart;
+  function initChart() {
+    const ctx = document.getElementById('ciChart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a1814',
+            borderColor: '#3a3530',
+            borderWidth: 1,
+            titleColor: '#8a8478',
+            bodyColor: '#f5f2ec',
+            titleFont: { family: 'IBM Plex Mono', size: 11 },
+            bodyFont: { family: 'IBM Plex Mono', size: 11 },
+            callbacks: {
+              label: ctx => '  ' + ctx.dataset.label + ': €' + fmt(ctx.raw)
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: false,
+            grid: { color: '#ede9e0' },
+            ticks: { color: '#8a8478', font: { family: 'IBM Plex Mono', size: 10 } }
+          },
+          y: {
+            grid: { color: '#ede9e0' },
+            ticks: {
+              color: '#8a8478',
+              font: { family: 'IBM Plex Mono', size: 10 },
+              callback: v => '€' + fmt(v)
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function calculate() {
+    const principal  = parseFloat(document.getElementById('s-principal').value);
+    const contrib    = parseFloat(document.getElementById('s-contrib').value);
+    const rate       = parseFloat(document.getElementById('s-rate').value) / 100;
+    const years      = parseInt(document.getElementById('s-years').value);
+    const inflation  = parseFloat(document.getElementById('s-inflation').value) / 100;
+    const n          = compoundN;
+
+    // Calculate year by year
+    const data = [];
+    let balance = principal;
+    const startYear = 2025;
+
+    for (let y = 0; y <= years; y++) {
+      const totalInvested = principal + contrib * 12 * y;
+      const interestCumul = balance - totalInvested;
+      const realValue = balance / Math.pow(1 + inflation, y);
+
+      data.push({
+        year: y,
+        balance: balance,
+        totalInvested: totalInvested,
+        interestCumul: interestCumul,
+        realValue: realValue,
+      });
+
+      // Grow for next year
+      const prevBalance = balance;
+      // compound + monthly contributions
+      let b = balance;
+      for (let m = 0; m < 12; m++) {
+        b = b * Math.pow(1 + rate/n, n/12) + contrib;
+      }
+      data[y].annualInterest = y === 0 ? 0 : b - balance - contrib * 12;
+      balance = b;
+    }
+
+    // Fix annual interest for year 0
+    if (data.length > 1) {
+      // recalc
+      let b2 = principal;
+      for (let y = 0; y < years; y++) {
+        const prev = b2;
+        for (let m = 0; m < 12; m++) {
+          b2 = b2 * Math.pow(1 + rate/n, n/12) + contrib;
+        }
+        data[y+1].annualInterest = b2 - prev - contrib * 12;
+      }
+    }
+
+    const final = data[years];
+
+    // Hero
+    document.getElementById('h-final').textContent = '€' + fmt(final.balance);
+    document.getElementById('h-interest').textContent = '+€' + fmt(final.interestCumul);
+    document.getElementById('h-roi').textContent = '+' + fmtDec((final.interestCumul / (principal + contrib * 12 * years)) * 100, 1) + '%';
+
+    // Breakdown
+    const total = final.balance;
+    const pPct = (principal / total * 100).toFixed(1);
+    const cPct = (contrib * 12 * years / total * 100).toFixed(1);
+    const iPct = (final.interestCumul / total * 100).toFixed(1);
+
+    document.getElementById('b-principal').textContent  = '€' + fmt(principal);
+    document.getElementById('b-contrib').textContent    = '€' + fmt(contrib * 12 * years);
+    document.getElementById('b-interest').textContent   = '€' + fmt(final.interestCumul);
+    document.getElementById('b-principal-pct').textContent  = pPct + '% of total';
+    document.getElementById('b-contrib-pct').textContent    = cPct + '% of total';
+    document.getElementById('b-interest-pct').textContent   = iPct + '% of total';
+
+    // Chart — show every year or every N years depending on duration
+    const step = years <= 20 ? 1 : years <= 35 ? 2 : 5;
+    const filtered = data.filter(d => d.year % step === 0);
+
+    chart.data.labels = filtered.map(d => 'Y' + d.year);
+    chart.data.datasets = [
+      {
+        label: 'Total value',
+        data: filtered.map(d => Math.round(d.balance)),
+        backgroundColor: 'rgba(200,80,10,0.15)',
+        borderColor: '#c8500a',
+        borderWidth: 2,
+        borderRadius: 3,
+        type: 'bar',
+        order: 2,
+      },
+      {
+        label: 'Principal + contributions',
+        data: filtered.map(d => Math.round(d.totalInvested)),
+        backgroundColor: 'rgba(30,77,140,0.12)',
+        borderColor: '#1e4d8c',
+        borderWidth: 1.5,
+        borderRadius: 3,
+        type: 'bar',
+        order: 3,
+      },
+      {
+        label: 'Real value (inflation-adj.)',
+        data: filtered.map(d => Math.round(d.realValue)),
+        borderColor: 'rgba(200,80,10,0.4)',
+        borderWidth: 2,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        type: 'line',
+        fill: false,
+        order: 1,
+        tension: 0.3,
+      }
+    ];
+    chart.update('none');
+
+    // Table — find doubling points
+    const doublingTarget = (principal + contrib * 12) * 2;
+    let doublingYear = null;
+
+    // Table
+    const tbody = document.getElementById('ci-table');
+    tbody.innerHTML = '';
+
+    data.forEach((d, i) => {
+      if (doublingYear === null && d.balance >= doublingTarget && i > 0) doublingYear = d.year;
+
+      const tr = document.createElement('tr');
+      const isMilestone = d.year === doublingYear;
+      if (isMilestone) tr.classList.add('milestone-row');
+
+      const milestoneText = isMilestone ? '2× ✦' : '';
+
+      tr.innerHTML = `
+        <td data-milestone="${milestoneText}">${d.year}</td>
+        <td>${startYear + d.year}</td>
+        <td>€${fmt(d.balance)}</td>
+        <td style="color:var(--muted)">€${fmt(d.realValue)}</td>
+        <td class="pos">${d.year === 0 ? '—' : '+€' + fmt(d.annualInterest)}</td>
+        <td>€${fmt(d.totalInvested)}</td>
+        <td class="orange">+€${fmt(Math.max(0, d.interestCumul))}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  initChart();
+  calculate();
+</script>
+</body>
+</html>

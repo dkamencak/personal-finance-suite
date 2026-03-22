@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Calculators</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #07080b;
+    --text: #e8eaf0;
+    --muted: #444857;
+    --muted2: #666c7a;
+    --gold: #f0c040;
+    --orange: #e87030;
+    --green: #40c878;
+    --blue: #4898f0;
+    --border: #181b22;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* ── Canvas background ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.55;
+  }
+
+  /* ── Layout ── */
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    gap: 3rem;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    animation: fadeUp 0.9s ease both;
+  }
+
+  .eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 14vw, 10rem);
+    line-height: 0.9;
+    letter-spacing: 0.03em;
+    background: linear-gradient(135deg, #f0c040 0%, #e87030 40%, #e8eaf0 75%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    user-select: none;
+  }
+
+  .subtitle {
+    margin-top: 1.2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted2);
+    text-transform: uppercase;
+  }
+
+  /* ── Cards ── */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    width: 100%;
+    max-width: 720px;
+    animation: fadeUp 0.9s 0.2s ease both;
+  }
+
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+
+  .card {
+    position: relative;
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem 1.8rem;
+    text-decoration: none;
+    color: var(--text);
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+    cursor: pointer;
+    display: block;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: 16px;
+  }
+
+  .card.fire::before  { background: radial-gradient(ellipse at top left, rgba(232,112,48,0.12), transparent 65%); }
+  .card.ci::before    { background: radial-gradient(ellipse at top left, rgba(64,200,120,0.10), transparent 65%); }
+
+  .card:hover { transform: translateY(-4px); }
+  .card.fire:hover { border-color: rgba(232,112,48,0.5); }
+  .card.ci:hover   { border-color: rgba(64,200,120,0.45); }
+  .card:hover::before { opacity: 1; }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 1.2rem;
+    border: 1px solid transparent;
+  }
+
+  .card.fire .card-tag { color: var(--orange); border-color: rgba(232,112,48,0.3); background: rgba(232,112,48,0.08); }
+  .card.ci   .card-tag { color: var(--green);  border-color: rgba(64,200,120,0.3);  background: rgba(64,200,120,0.08); }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin-bottom: 0.8rem;
+  }
+
+  .card.fire .card-title { color: var(--orange); }
+  .card.ci   .card-title { color: var(--green); }
+
+  .card-desc {
+    font-size: 0.68rem;
+    color: var(--muted2);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-feature {
+    font-size: 0.62rem;
+    color: var(--muted2);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-feature::before {
+    content: '→';
+    font-size: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  .card.fire .card-feature::before { color: var(--orange); }
+  .card.ci   .card-feature::before { color: var(--green); }
+
+  .card-cta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: gap 0.2s;
+  }
+
+  .card.fire .card-cta { color: var(--orange); }
+  .card.ci   .card-cta { color: var(--green); }
+  .card:hover .card-cta { gap: 0.7rem; }
+
+  /* ── Mini ticker ── */
+  .ticker {
+    width: 100%;
+    max-width: 720px;
+    border-top: 1px solid var(--border);
+    padding-top: 1.2rem;
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    animation: fadeUp 0.9s 0.4s ease both;
+  }
+
+  .tick {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .tick-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .tick-val {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    transition: color 0.4s;
+  }
+
+  .tick-val.up   { color: var(--green); }
+  .tick-val.down { color: #e85050; }
+
+  /* ── Footer ── */
+  footer {
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    animation: fadeUp 0.9s 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="page">
+  <div class="header">
+    <div class="eyebrow">Personal Finance Suite</div>
+    <h1>Financial<br>Calculators</h1>
+    <div class="subtitle">Plan · Grow · Retire</div>
+  </div>
+
+  <div class="cards">
+    <a class="card fire" href="fire_kalkulator.html">
+      <div class="card-tag">Retirement</div>
+      <div class="card-title">FIRE<br>Calculator</div>
+      <div class="card-desc">Calculate your path to financial independence and early retirement.</div>
+      <div class="card-features">
+        <div class="card-feature">FIRE number & milestones</div>
+        <div class="card-feature">Coast &amp; Barista FIRE</div>
+        <div class="card-feature">Withdrawal rate (3–4%)</div>
+        <div class="card-feature">Year-by-year projection</div>
+      </div>
+      <div class="card-cta">Open calculator <span>→</span></div>
+    </a>
+
+    <a class="card ci" href="compound_interest.html">
+      <div class="card-tag">Growth</div>
+      <div class="card-title">Compound<br>Interest</div>
+      <div class="card-desc">See how compound interest grows your wealth over time.</div>
+      <div class="card-features">
+        <div class="card-feature">Inflation-adjusted returns</div>
+        <div class="card-feature">Daily / monthly / annual</div>
+        <div class="card-feature">Principal vs interest split</div>
+        <div class="card-feature">Doubling point tracker</div>
+      </div>
+      <div class="card-cta">Open calculator <span>→</span></div>
+    </a>
+  </div>
+
+  <div class="ticker">
+    <div class="tick">
+      <div class="tick-label">Rule of 72</div>
+      <div class="tick-val" id="t-r72">9.6 yrs</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">€10k @ 7.5% / 20yr</div>
+      <div class="tick-val up" id="t-demo">€42,478</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">S&P 500 avg return</div>
+      <div class="tick-val up">~10% / yr</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">Inflation avg (EU)</div>
+      <div class="tick-val">~2.5% / yr</div>
+    </div>
+  </div>
+
+  <footer>Not financial advice · Projections are approximations</footer>
+</div>
+
+<script>
+// ── Animated canvas background ──
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+
+let W, H, nodes = [], curves = [];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', () => { resize(); init(); });
+resize();
+
+// Floating orbs (compound interest bubbles)
+class Orb {
+  constructor() { this.reset(true); }
+  reset(rand) {
+    this.x = rand ? Math.random() * W : (Math.random() > 0.5 ? -20 : W + 20);
+    this.y = rand ? Math.random() * H : H * 0.3 + Math.random() * H * 0.5;
+    this.r = 2 + Math.random() * 5;
+    this.vx = (Math.random() - 0.5) * 0.4;
+    this.vy = -0.15 - Math.random() * 0.3;
+    this.alpha = 0.05 + Math.random() * 0.18;
+    const palette = ['#f0c040','#e87030','#40c878','#4898f0','#a070e8'];
+    this.color = palette[Math.floor(Math.random() * palette.length)];
+    this.life = 0;
+    this.maxLife = 200 + Math.random() * 400;
+    // size multiplier for "doubling" effect
+    this.grow = 1 + Math.random() * 0.003;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.r *= this.grow;
+    this.life++;
+    if (this.life > this.maxLife || this.r > 80) this.reset(false);
+  }
+  draw() {
+    const fade = Math.min(1, this.life / 40) * Math.min(1, (this.maxLife - this.life) / 40);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.strokeStyle = this.color;
+    ctx.globalAlpha = this.alpha * fade;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// Animated compound curve
+class GrowthCurve {
+  constructor(idx) {
+    this.idx = idx;
+    this.reset();
+  }
+  reset() {
+    this.startX = -50;
+    this.color = ['#f0c040','#e87030','#40c878','#4898f0'][this.idx % 4];
+    this.alpha = 0.06 + Math.random() * 0.1;
+    this.baseY = H * (0.35 + this.idx * 0.12);
+    this.speed = 0.4 + Math.random() * 0.6;
+    this.progress = 0;
+    this.rate = 0.04 + Math.random() * 0.06;
+    this.life = 0;
+    this.maxLife = 300 + Math.random() * 200;
+  }
+  update() {
+    this.progress = Math.min(1, this.progress + this.speed / W);
+    this.life++;
+    if (this.life > this.maxLife) this.reset();
+  }
+  draw() {
+    const fade = Math.min(1, this.life / 60) * Math.min(1, (this.maxLife - this.life) / 60);
+    ctx.beginPath();
+    const pts = Math.floor(this.progress * W);
+    for (let x = 0; x <= pts; x++) {
+      const t = x / W;
+      const y = this.baseY - (Math.exp(t * 3 * this.rate * 20) - 1) * 60;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = this.color;
+    ctx.globalAlpha = this.alpha * fade;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// Grid lines (subtle)
+function drawGrid() {
+  ctx.globalAlpha = 0.03;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 0.5;
+  const step = 80;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Floating numbers
+class FloatNum {
+  constructor() { this.reset(true); }
+  reset(rand) {
+    this.x = rand ? Math.random() * W : Math.random() * W;
+    this.y = rand ? Math.random() * H : H + 20;
+    this.vy = -0.3 - Math.random() * 0.5;
+    this.text = (Math.random() > 0.5 ? '+' : '') + (Math.random() * 30 + 2).toFixed(1) + '%';
+    this.alpha = 0.04 + Math.random() * 0.08;
+    this.size = 9 + Math.random() * 7;
+    const c = ['#f0c040','#40c878','#4898f0','#e87030'];
+    this.color = c[Math.floor(Math.random() * c.length)];
+    this.life = 0;
+    this.maxLife = 250 + Math.random() * 250;
+  }
+  update() {
+    this.y += this.vy;
+    this.life++;
+    if (this.life > this.maxLife) this.reset(false);
+  }
+  draw() {
+    const fade = Math.min(1, this.life/40) * Math.min(1,(this.maxLife-this.life)/40);
+    ctx.globalAlpha = this.alpha * fade;
+    ctx.fillStyle = this.color;
+    ctx.font = `${this.size}px 'IBM Plex Mono', monospace`;
+    ctx.fillText(this.text, this.x, this.y);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function init() {
+  nodes = Array.from({length: 60}, () => new Orb());
+  curves = Array.from({length: 4}, (_, i) => new GrowthCurve(i));
+  floats = Array.from({length: 25}, () => new FloatNum());
+}
+
+let floats = [];
+init();
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  drawGrid();
+  curves.forEach(c => { c.update(); c.draw(); });
+  nodes.forEach(o => { o.update(); o.draw(); });
+  floats.forEach(f => { f.update(); f.draw(); });
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── Rule of 72 live counter ──
+let rateAnim = 7.5;
+let dir = 1;
+setInterval(() => {
+  rateAnim += dir * 0.1;
+  if (rateAnim >= 12) dir = -1;
+  if (rateAnim <= 4)  dir = 1;
+  const yrs = (72 / rateAnim).toFixed(1);
+  document.getElementById('t-r72').textContent = yrs + ' yrs';
+}, 120);
+</script>
+</body>
+</html>
