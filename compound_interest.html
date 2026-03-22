@@ -10,16 +10,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #f5f2ec;
-    --surface: #ffffff;
-    --border: #e0dbd0;
-    --border2: #ccc8bc;
-    --text: #1a1814;
-    --muted: #8a8478;
-    --accent: #c8500a;
-    --accent2: #2a6e3f;
-    --accent3: #1e4d8c;
-    --soft: #ede9e0;
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2229;
+    --border2: #2a2f3a;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --accent: #ff8040;
+    --accent2: #40c878;
+    --accent3: #4898f0;
+    --soft: #181b22;
   }
 
   body {
@@ -80,9 +80,10 @@
 
   /* Big result display */
   .hero-result {
-    background: var(--text);
-    color: var(--bg);
+    background: #181b22;
+    color: var(--text);
     border-radius: 16px;
+    border: 1px solid var(--border);
     padding: 2rem;
     margin-bottom: 1rem;
     display: flex;
@@ -96,7 +97,7 @@
     font-size: 0.62rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #888;
+    color: var(--muted);
     margin-bottom: 0.4rem;
   }
 
@@ -124,8 +125,8 @@
     letter-spacing: -0.02em;
   }
 
-  .hero-stat-val.green { color: #5ccb82; }
-  .hero-stat-val.blue  { color: #6ab4ff; }
+  .hero-stat-val.green { color: #40c878; }
+  .hero-stat-val.blue  { color: #4898f0; }
 
   /* Inputs grid */
   .grid-3 {
@@ -368,12 +369,12 @@
 
   td {
     padding: 0.5rem 0.5rem;
-    border-bottom: 1px solid #f0ece3;
+    border-bottom: 1px solid #15171c;
     color: var(--text);
   }
 
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #faf8f4; }
+  tr:hover td { background: #13161c; }
 
   td.pos { color: var(--accent2); }
   td.orange { color: var(--accent); }
@@ -601,11 +602,11 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1a1814',
-            borderColor: '#3a3530',
+            backgroundColor: '#111318',
+            borderColor: '#1e2229',
             borderWidth: 1,
-            titleColor: '#8a8478',
-            bodyColor: '#f5f2ec',
+            titleColor: '#5a6070',
+            bodyColor: '#e8eaf0',
             titleFont: { family: 'IBM Plex Mono', size: 11 },
             bodyFont: { family: 'IBM Plex Mono', size: 11 },
             callbacks: {
@@ -616,13 +617,13 @@
         scales: {
           x: {
             stacked: false,
-            grid: { color: '#ede9e0' },
-            ticks: { color: '#8a8478', font: { family: 'IBM Plex Mono', size: 10 } }
+            grid: { color: '#1e2229' },
+            ticks: { color: '#5a6070', font: { family: 'IBM Plex Mono', size: 10 } }
           },
           y: {
-            grid: { color: '#ede9e0' },
+            grid: { color: '#1e2229' },
             ticks: {
-              color: '#8a8478',
+              color: '#5a6070',
               font: { family: 'IBM Plex Mono', size: 10 },
               callback: v => '€' + fmt(v)
             }
@@ -711,8 +712,8 @@
       {
         label: 'Total value',
         data: filtered.map(d => Math.round(d.balance)),
-        backgroundColor: 'rgba(200,80,10,0.15)',
-        borderColor: '#c8500a',
+        backgroundColor: 'rgba(255,128,64,0.18)',
+        borderColor: '#ff8040',
         borderWidth: 2,
         borderRadius: 3,
         type: 'bar',
@@ -721,8 +722,8 @@
       {
         label: 'Principal + contributions',
         data: filtered.map(d => Math.round(d.totalInvested)),
-        backgroundColor: 'rgba(30,77,140,0.12)',
-        borderColor: '#1e4d8c',
+        backgroundColor: 'rgba(72,152,240,0.12)',
+        borderColor: '#4898f0',
         borderWidth: 1.5,
         borderRadius: 3,
         type: 'bar',
@@ -731,7 +732,7 @@
       {
         label: 'Real value (inflation-adj.)',
         data: filtered.map(d => Math.round(d.realValue)),
-        borderColor: 'rgba(200,80,10,0.4)',
+        borderColor: 'rgba(255,128,64,0.35)',
         borderWidth: 2,
         borderDash: [5, 4],
         pointRadius: 0,

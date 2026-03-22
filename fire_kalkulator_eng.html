@@ -36,6 +36,21 @@
     margin: 0 auto;
   }
 
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--accent); }
+
   header {
     margin-bottom: 2.5rem;
   }
@@ -85,18 +100,41 @@
     margin-bottom: 0.8rem;
   }
 
-  .slider-value {
-    font-size: 1.6rem;
-    font-weight: 700;
+  .slider-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
     margin-bottom: 0.6rem;
-    letter-spacing: -0.02em;
   }
 
-  .slider-value span {
-    font-size: 0.9rem;
+  .slider-value-input {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    outline: none;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+
+  .slider-value-input::-webkit-outer-spin-button,
+  .slider-value-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .slider-value-input:focus { border-bottom-color: var(--accent); }
+
+  .slider-unit {
+    font-size: 0.85rem;
     font-weight: 400;
     color: var(--muted);
-    margin-left: 0.2rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   input[type=range] {
@@ -419,6 +457,7 @@
 <body>
 <div class="container">
   <header>
+    <a class="back-link" href="index.html">← All calculators</a>
     <div class="eyebrow">Financial Independence</div>
     <h1>FIRE <span>Calculator</span></h1>
   </header>
@@ -427,22 +466,34 @@
   <div class="grid">
     <div class="card">
       <div class="card-label">Starting Capital</div>
-      <div class="slider-value" id="v-kapital">50,000 <span>€</span></div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-kapital" min="0" max="1000000" step="1000" value="50000">
+        <span class="slider-unit">€</span>
+      </div>
       <input type="range" id="s-kapital" min="0" max="200000" step="1000" value="50000">
     </div>
     <div class="card">
       <div class="card-label">Monthly Investment</div>
-      <div class="slider-value" id="v-ulog">800 <span>€/mo</span></div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-ulog" min="0" max="20000" step="50" value="800">
+        <span class="slider-unit">€/mo</span>
+      </div>
       <input type="range" id="s-ulog" min="100" max="3000" step="50" value="800">
     </div>
     <div class="card">
       <div class="card-label">Monthly Expenses</div>
-      <div class="slider-value" id="v-troskovi">1,500 <span>€/mo</span></div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-troskovi" min="0" max="20000" step="100" value="1500">
+        <span class="slider-unit">€/mo</span>
+      </div>
       <input type="range" id="s-troskovi" min="500" max="5000" step="100" value="1500">
     </div>
     <div class="card">
       <div class="card-label">Annual Return</div>
-      <div class="slider-value" id="v-prinos">7,5 <span>%</span></div>
+      <div class="slider-row">
+        <input type="number" class="slider-value-input" id="v-prinos" min="0.1" max="50" step="0.1" value="7.5">
+        <span class="slider-unit">%</span>
+      </div>
       <input type="range" id="s-prinos" min="3" max="15" step="0.5" value="7.5">
     </div>
     <div class="card">
@@ -551,13 +602,6 @@
 </div>
 
 <script>
-  const sliders = {
-    kapital: { el: document.getElementById('s-kapital'), val: document.getElementById('v-kapital'), fmt: v => fmt(v) + ' €' },
-    ulog:    { el: document.getElementById('s-ulog'),    val: document.getElementById('v-ulog'),    fmt: v => fmt(v) + ' €/mo' },
-    troskovi:{ el: document.getElementById('s-troskovi'),val: document.getElementById('v-troskovi'),fmt: v => fmt(v) + ' €/mo' },
-    prinos:  { el: document.getElementById('s-prinos'),  val: document.getElementById('v-prinos'),  fmt: v => v.toString().replace('.',',') + ' %' },
-  };
-
   let withdrawalRate = 0.04;
 
   const wrNotes = {
@@ -624,10 +668,10 @@
   }
 
   function calculate() {
-    const kapital  = parseFloat(sliders.kapital.el.value);
-    const ulog     = parseFloat(sliders.ulog.el.value);
-    const troskovi = parseFloat(sliders.troskovi.el.value);
-    const prinos   = parseFloat(sliders.prinos.el.value) / 100;
+    const kapital  = parseFloat(document.getElementById('v-kapital').value)  || 0;
+    const ulog     = parseFloat(document.getElementById('v-ulog').value)     || 0;
+    const troskovi = parseFloat(document.getElementById('v-troskovi').value) || 0;
+    const prinos   = (parseFloat(document.getElementById('v-prinos').value)  || 0) / 100;
 
     const fireBreak   = troskovi * 12 / withdrawalRate;
     const coastBreak  = fireBreak / 3;
@@ -765,20 +809,43 @@
     }
   }
 
-  Object.entries(sliders).forEach(([key, s]) => {
-    s.el.addEventListener('input', () => {
-      s.val.innerHTML = s.fmt(s.el.value).replace(' €', ' <span>€</span>')
-        .replace('/mo', '</span>/mo').replace(' %', ' <span>%</span>');
-      // fix span wrapping for simple cases
-      s.val.innerHTML = s.fmt(s.el.value).replace(/(\d[\d.,]*)(\s*[€%\/\w]+.*)/, '$1<span>$2</span>');
+  // Slider configs: id of range, id of number input, min, max
+  const sliderConfigs = [
+    { rangeId: 's-kapital',  numId: 'v-kapital',  min: 0,   max: 1000000, step: 1000, decimal: false },
+    { rangeId: 's-ulog',     numId: 'v-ulog',     min: 0,   max: 20000,   step: 50,   decimal: false },
+    { rangeId: 's-troskovi', numId: 'v-troskovi', min: 0,   max: 20000,   step: 100,  decimal: false },
+    { rangeId: 's-prinos',   numId: 'v-prinos',   min: 0.1, max: 50,      step: 0.1,  decimal: true  },
+  ];
+
+  function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  sliderConfigs.forEach(({ rangeId, numId, min, max }) => {
+    const range = document.getElementById(rangeId);
+    const num   = document.getElementById(numId);
+
+    // Range → number input
+    range.addEventListener('input', () => {
+      num.value = range.value;
       calculate();
     });
-  });
 
-  // Init display values
-  Object.values(sliders).forEach(s => {
-    const raw = s.fmt(s.el.value);
-    s.val.innerHTML = raw;
+    // Number input → range slider
+    num.addEventListener('input', () => {
+      const v = parseFloat(num.value);
+      if (!isNaN(v)) {
+        range.value = Math.min(max, Math.max(min, v));
+        calculate();
+      }
+    });
+
+    // On blur, clamp to min if empty/invalid
+    num.addEventListener('blur', () => {
+      if (num.value === '' || isNaN(parseFloat(num.value))) {
+        num.value = min;
+        range.value = min;
+        calculate();
+      }
+    });
   });
 
   initChart();
