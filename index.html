@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Financial Calculators</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,14 +87,15 @@
   /* ── Cards ── */
   .cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.2rem;
     width: 100%;
-    max-width: 720px;
+    max-width: 900px;
     animation: fadeUp 0.9s 0.2s ease both;
   }
 
-  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+  @media (min-width: 701px) and (max-width: 960px) { .cards { grid-template-columns: 1fr 1fr; } }
 
   .card {
     position: relative;
@@ -196,7 +198,12 @@
   .card.ci   .card-cta { color: var(--green); }
   .card:hover .card-cta { gap: 0.7rem; }
 
-  /* ── Mini ticker ── */
+  .card.planner::before    { background: radial-gradient(ellipse at top left, rgba(196,122,255,0.10), transparent 65%); }
+  .card.planner:hover { border-color: rgba(196,122,255,0.45); }
+  .card.planner .card-tag { color: #c47aff; border-color: rgba(196,122,255,0.3); background: rgba(196,122,255,0.08); }
+  .card.planner .card-title { color: #c47aff; }
+  .card.planner .card-feature::before { color: #c47aff; }
+  .card.planner .card-cta { color: #c47aff; }
   .ticker {
     width: 100%;
     max-width: 720px;
@@ -262,6 +269,19 @@
   </div>
 
   <div class="cards">
+    <a class="card planner" href="financial_planner.html">
+      <div class="card-tag">Planning</div>
+      <div class="card-title">Financial<br>Planner</div>
+      <div class="card-desc">Track your monthly budget, spending and debt repayment.</div>
+      <div class="card-features">
+        <div class="card-feature">Monthly budget tracker</div>
+        <div class="card-feature">Expense categories</div>
+        <div class="card-feature">Debt / loan calculator</div>
+        <div class="card-feature">Stored in your browser</div>
+      </div>
+      <div class="card-cta">Open planner <span>→</span></div>
+    </a>
+   
     <a class="card ci" href="compound_interest.html">
       <div class="card-tag">Growth</div>
       <div class="card-title">Compound<br>Interest</div>
@@ -275,18 +295,18 @@
       <div class="card-cta">Open calculator <span>→</span></div>
     </a>
 
-    <a class="card fire" href="fire_kalkulator_eng.html">
-       <div class="card-tag">Retirement</div>
-       <div class="card-title">FIRE<br>Calculator</div>
-       <div class="card-desc">Calculate your path to financial independence and early retirement.</div>
-       <div class="card-features">
-         <div class="card-feature">FIRE number & milestones</div>
-         <div class="card-feature">Coast &amp; Barista FIRE</div>
-         <div class="card-feature">Withdrawal rate (3–4%)</div>
-         <div class="card-feature">Year-by-year projection</div>
-       </div>
-       <div class="card-cta">Open calculator <span>→</span></div>
-     </a>
+    <a class="card fire" href="fire_kalkulator.html">
+      <div class="card-tag">Retirement</div>
+      <div class="card-title">FIRE<br>Calculator</div>
+      <div class="card-desc">Calculate your path to financial independence and early retirement.</div>
+      <div class="card-features">
+        <div class="card-feature">FIRE number & milestones</div>
+        <div class="card-feature">Coast &amp; Barista FIRE</div>
+        <div class="card-feature">Withdrawal rate (3–4%)</div>
+        <div class="card-feature">Year-by-year projection</div>
+      </div>
+      <div class="card-cta">Open calculator <span>→</span></div>
+    </a>
   </div>
 
   <div class="ticker">
