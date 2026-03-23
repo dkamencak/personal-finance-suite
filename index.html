@@ -311,10 +311,6 @@
 
   <div class="ticker">
     <div class="tick">
-      <div class="tick-label">Rule of 72</div>
-      <div class="tick-val" id="t-r72">9.6 yrs</div>
-    </div>
-    <div class="tick">
       <div class="tick-label">€10k @ 7.5% / 20yr</div>
       <div class="tick-val up" id="t-demo">€42,478</div>
     </div>
@@ -485,16 +481,6 @@ function loop() {
 }
 loop();
 
-// ── Rule of 72 live counter ──
-let rateAnim = 7.5;
-let dir = 1;
-setInterval(() => {
-  rateAnim += dir * 0.1;
-  if (rateAnim >= 12) dir = -1;
-  if (rateAnim <= 4)  dir = 1;
-  const yrs = (72 / rateAnim).toFixed(1);
-  document.getElementById('t-r72').textContent = yrs + ' yrs';
-}, 120);
 </script>
 </body>
 </html>
